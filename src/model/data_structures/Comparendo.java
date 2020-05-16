@@ -22,6 +22,8 @@ public class Comparendo implements Comparable<Comparendo>
 	private Haversine distanciador;
 	
 	private int numeroDias;
+	
+	private int idVertice;
 
 
 
@@ -42,8 +44,19 @@ public class Comparendo implements Comparable<Comparendo>
 		distanciador = new Haversine();
 		
 		numeroDias = 0;
+		idVertice =-1;
 	}
 
+	public int darIdVertice()
+	{
+		return idVertice;
+	}
+	
+	public void cambiarIdVertice(int nuevoId)
+	{
+		idVertice = nuevoId;
+	}
+	
 	public int darNumerosDias()
 	{
 		return numeroDias;

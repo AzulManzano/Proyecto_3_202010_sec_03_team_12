@@ -1,13 +1,19 @@
 package model.logic;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -16,10 +22,18 @@ import com.google.gson.stream.JsonReader;
 
 import model.data_structures.RedBlackBST;
 import model.data_structures.RedBlackBST2;
+import model.data_structures.Arco;
+import model.data_structures.Bogota_Vertice;
+import model.data_structures.BuscadorVertices;
 import model.data_structures.Comparendo;
+import model.data_structures.Escritor;
+import model.data_structures.EstacionPolicia;
+import model.data_structures.Graph;
+import model.data_structures.Haversine;
 import model.data_structures.LLaves2A;
 import model.data_structures.LLaves2B;
 import model.data_structures.LinearProbing;
+import model.data_structures.Lista;
 import model.data_structures.MaxHeapCP;
 import model.data_structures.Nodo;
 import model.data_structures.Queue;
@@ -32,92 +46,88 @@ import model.data_structures.SequentialSearch;
  */
 public class Modelo 
 {
-	//	Comparendos_DEI_2018_Bogotá_D.C_small_50000_sorted
-	//		
-	// PORFAVOR LEER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//Ya que mi computador no tiene la capacidad de leer los 500000 datos del archivo grande no pude hacer las tablas de datos con esa informacion, 
-	//por ese motivo tuve que trabajar con este archivo que solo tiene 50000. Gracias por tu comprension
 
-	public static String PATH = "./data/Comparendos_DEI_2018_Bogotá_D.C_small_50000_sorted.geojson";
-	// PORFAVOR LEER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	private MaxHeapCP<Comparendo> listaCarga;
-	private RedBlackBST<Date,Comparendo> arbol = new RedBlackBST<Date,Comparendo>();
-	private Queue<Comparendo> estructuraAplicacion2C;
-	private RedBlackBST2<Integer,MaxHeapCP<Comparendo>> nuevoArbol = new RedBlackBST2<Integer,MaxHeapCP<Comparendo>>();
-	private MaxHeapCP<Comparendo> estructura3C;
+	public static String PATH = "./data/Comparendos_DEI_2018_Bogotá_D.C_50000_.geojson";
+	public static String ESTACION = "./data/estacionpolicia.geojson.json";
 
-	double costoCola;
-	double costoMaxHeap;
+	private EstacionPolicia mayorEstacionPolicia;
+	private Bogota_Vertice mayorVerice;
+	private Comparendo mayorComparendo;
 
+	private Haversine distanciador;
+	private Escritor escritor;
+	private BuscadorVertices buscarVertice;
 
-	int numeroDiasTotales2C;
-	int numeroComparendos2C;
+	private MaxHeapCP<Comparendo> listaComparenodos;
+	private RedBlackBST2<Integer,Comparendo>  comparendos;
+	private RedBlackBST2<Integer,EstacionPolicia> estcionesPolicia;
 
-	int diasMax400, numer400, dias400, diasMin400; 
-	int diasMax40, numer40, dias40, diasMin40; 
-	int diasMax4, numer4, dias4, diasMin4; 
-
-
-	int numeroDiasTotales3C;
-	int numeroComparendos3C;
-
-	int diasMax400N, numer400N, dias400N, diasMin400N; 
-	int diasMax40N, numer40N, dias40N, diasMin40N; 
-	int diasMax4N, numer4N, dias4N, diasMin4N; 
-
-	int comparendosProcesar;
+	private Graph<Integer, Bogota_Vertice> grafo;
 
 	public Modelo()
 	{
-		listaCarga = new MaxHeapCP<Comparendo>();
-		estructuraAplicacion2C = new Queue<Comparendo>();
-		estructura3C = new MaxHeapCP<Comparendo>();
+		mayorEstacionPolicia = null;
+		mayorVerice = null;
+		mayorComparendo = null;
+		buscarVertice = new BuscadorVertices(); 
 
-		costoCola = 0;
-		costoMaxHeap =0;
+		listaComparenodos = new MaxHeapCP<Comparendo>();
 
-		diasMax400 = 0; 
-		diasMin400 = 1000; 
-		diasMax40 = 0; 
-		diasMin40 = 1000; 
-		diasMax4 = 0;  
-		diasMin4 = 1000;
+		grafo = new Graph<Integer, Bogota_Vertice>();
 
-		diasMax400N = 0; 
-		diasMin400N = 1000; 
-		diasMax40N = 0; 
-		diasMin40N = 1000; 
-		diasMax4N = 0;  
-		diasMin4N = 1000;
+
+		distanciador = new Haversine();
+		escritor = new Escritor();
+
+
+		estcionesPolicia = new RedBlackBST2<Integer,EstacionPolicia>(); 
+		comparendos = new RedBlackBST2<Integer,Comparendo>();
+
 	}
 
 
 	// Retorno de estructuras -----------------------
 
-	public MaxHeapCP<Comparendo> darListaDeCarga()
+	public RedBlackBST2<Integer,Comparendo> darArbolComparendos()
 	{
-		return listaCarga;
+		return comparendos;
 	}
 
-	public RedBlackBST<Date,Comparendo> darArbol()
+	public MaxHeapCP<Comparendo> darListaDeComparendos()
 	{
-		return arbol;
+		return listaComparenodos;
 	}
 
-	public double darCostoCola()
+	public RedBlackBST2<Integer,EstacionPolicia> darArbolEstacionesPolicia()
 	{
-		return costoCola;
+		return estcionesPolicia;
 	}
 
-	public double darCostoMaxHeap()
+	public Graph<Integer, Bogota_Vertice> darGrafo()
 	{
-		return costoMaxHeap;
+		return grafo;	
 	}
-	public int darTam()
+
+	public Escritor escribir()
 	{
-		int valor = comparendosProcesar;
-		return valor;
+		return escritor;
 	}
+
+	public EstacionPolicia darMayorEstacion()
+	{
+		return mayorEstacionPolicia;
+	}
+
+	public Bogota_Vertice darMayorVertice()
+	{
+		return mayorVerice;
+	}
+
+	public Comparendo darMayorComparendo()
+	{
+		return mayorComparendo;
+	}
+
 	//---------------------------------------------
 
 
@@ -125,13 +135,25 @@ public class Modelo
 
 	public int darTotalComparendos()
 	{
-		return listaCarga.darNumElementos();
+		return listaComparenodos.darNumElementos();
 	}
+
+	public int darNumeroVertices()
+	{
+		return grafo.V();
+	}
+
+	public int darNumeroArcos()
+	{
+		return grafo.E();
+	}
+
 
 	//---------------------------------------------------
 
 	public void cargarDatos() 
 	{
+		int mayor = 0;
 		JsonReader reader;
 		try {
 			reader = new JsonReader(new FileReader(PATH));
@@ -163,25 +185,15 @@ public class Modelo
 
 
 				Comparendo c = new Comparendo(OBJECTID, FECHA_HORA, DES_INFRAC, MEDIO_DETE, CLASE_VEHI, TIPO_SERVI, INFRACCION, LOCALIDAD, longitud, latitud);
-				Comparendo d = new Comparendo(OBJECTID, FECHA_HORA, DES_INFRAC, MEDIO_DETE, CLASE_VEHI, TIPO_SERVI, INFRACCION, LOCALIDAD, longitud, latitud);
-				d.cambiarComparacion(0);
-				
-				listaCarga.agregar(d);
-				arbol.put(FECHA_HORA, d);
 
-				c.cambiarComparacion(4);
+				comparendos.put(OBJECTID, c);
+				listaComparenodos.agregar(c);
 
-				int llaves = numeroDiaAno(c.darFecha());
-
-				if(nuevoArbol.get(llaves)== null)
+				if(OBJECTID>mayor)
 				{
-					MaxHeapCP<Comparendo> nuevocosito = new MaxHeapCP<Comparendo>();
-					nuevocosito.agregar(c);
-					nuevoArbol.put(llaves, nuevocosito);
+					mayor=OBJECTID;
+					mayorComparendo = c;
 				}
-				else
-					nuevoArbol.get(llaves).agregar(c);
-
 			}
 
 		} catch (FileNotFoundException | ParseException e) {
@@ -191,12 +203,101 @@ public class Modelo
 
 	}
 
-	public RedBlackBST2<Integer,MaxHeapCP<Comparendo>> darArbolNuevo()
+	public void cargarMallaVial() 
 	{
-		return nuevoArbol;
+		int mayor = 0;
+		JsonReader reader;
+		try {
+			reader = new JsonReader(new FileReader("data/mallaVial.json"));
+			JsonElement elem = JsonParser.parseReader(reader); 
+			JsonArray e2 = elem.getAsJsonObject().get("Vertices").getAsJsonArray();
+
+
+			for(JsonElement e: e2) {
+
+				double longitud = e.getAsJsonObject().get("Longitud").getAsDouble();
+				double latitud = e.getAsJsonObject().get("Latitud").getAsDouble();
+				int OBJECTID = e.getAsJsonObject().get("Id").getAsInt();
+
+				Bogota_Vertice nuevo = new Bogota_Vertice(OBJECTID,latitud,longitud );
+				grafo.addVertex(OBJECTID, nuevo);
+				buscarVertice.cargar(OBJECTID, latitud, longitud, nuevo);
+				if(OBJECTID>mayor)
+				{
+					mayor=OBJECTID;
+					mayorVerice = nuevo;
+				}
+
+			}
+
+			JsonArray e3 = elem.getAsJsonObject().get("Arcos").getAsJsonArray();
+
+			for(JsonElement e: e3) {
+
+				double costo = e.getAsJsonObject().get("Costo").getAsDouble();
+				int destino = e.getAsJsonObject().get("IdDestino").getAsInt();
+				int origen = e.getAsJsonObject().get("IdOrigen").getAsInt();
+
+				grafo.addEdge(origen, destino, costo);
+
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+
 	}
 
-	public MaxHeapCP<Comparendo> requerimiento1A()
+	public void cargarEstaciones() 
+	{
+		int mayor = 0;
+		JsonReader reader;
+		try {
+			reader = new JsonReader(new FileReader(ESTACION));
+			JsonElement elem = JsonParser.parseReader(reader); 
+			JsonArray e2 = elem.getAsJsonObject().get("features").getAsJsonArray();
+
+
+			for(JsonElement e: e2) {
+
+				double longitud = e.getAsJsonObject().get("geometry").getAsJsonObject().get("coordinates").getAsJsonArray()
+						.get(0).getAsDouble();
+
+				double latitud = e.getAsJsonObject().get("geometry").getAsJsonObject().get("coordinates").getAsJsonArray()
+						.get(1).getAsDouble();
+
+				int OBJECTID = e.getAsJsonObject().get("properties").getAsJsonObject().get("OBJECTID").getAsInt();
+
+				String EPOIULOCAL = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPOIULOCAL").getAsString();
+				String EPOTELEFON = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPOTELEFON").getAsString();
+				String EPOHORARIO = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPOHORARIO").getAsString();
+				String EPOSERVICIO = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPOSERVICIO").getAsString();
+				String EPODESCRIP = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPODESCRIP").getAsString();
+				String DIRECCION = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPODIR_SITIO").getAsString();
+				String NOMBRE = e.getAsJsonObject().get("properties").getAsJsonObject().get("EPONOMBRE").getAsString();
+
+
+				EstacionPolicia n = new EstacionPolicia( OBJECTID, DIRECCION,  NOMBRE,  latitud,  longitud,EPODESCRIP, EPOSERVICIO, EPOHORARIO,EPOTELEFON,EPOIULOCAL);
+
+
+				estcionesPolicia.put(OBJECTID, n);
+
+				if(OBJECTID>mayor)
+				{
+					mayor=OBJECTID;
+					mayorEstacionPolicia = n;
+				}
+			}
+
+		} catch (FileNotFoundException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+
+	}
+
+
+	public MaxHeapCP<Comparendo> mayorGravedad()
 	{
 		MaxHeapCP<Comparendo> elementos = clonar();
 		int num = elementos.darNumElementos();
@@ -212,1007 +313,316 @@ public class Modelo
 		}
 		return elementosFinales;
 	}
-
-	public MaxHeapCP<Comparendo> requerimiento2A(Integer pMes, Integer pDia)
-	{
-		LLaves2A llave = new LLaves2A(pMes,pDia);
-		SeparateChaining<LLaves2A,MaxHeapCP<Comparendo>> estructura = new SeparateChaining<LLaves2A,MaxHeapCP<Comparendo>>();
-		MaxHeapCP<Comparendo> respuesta = new MaxHeapCP<Comparendo>();
-		MaxHeapCP<Comparendo> trabajable = clonar();
-
-		int corredor = trabajable.darNumElementos();
-
-		for(int i = 0; i <corredor;i++)
-		{
-			Comparendo actual = trabajable.sacarMax();
-			actual.cambiarComparacion(0);
-
-			Integer diaIndicado = actual.darFecha().getDay();
-			Integer mesIndicado = actual.darFecha().getMonth();
-			LLaves2A llaveq = new LLaves2A(mesIndicado,diaIndicado);
-
-
-			MaxHeapCP<Comparendo> agregada = new MaxHeapCP<Comparendo>();
-			if(estructura.get(llaveq) == null)
-			{
-				agregada.agregar(actual);
-			}
-			else
-			{
-				MaxHeapCP<Comparendo> estano = estructura.delete(llaveq);
-				estano.agregar(actual);
-				agregada = estano;
-			}
-
-
-			estructura.put(llaveq, agregada);
-		}
-
-		respuesta = estructura.get(llave);
-
-		return respuesta;
-	}
-
-	public MaxHeapCP<Comparendo> requerimiento3A(String pFechaInicio,String pFechaFinal, String pLocalidad) throws ParseException
-	{
-		MaxHeapCP<Comparendo> elementos = clonar();
-		MaxHeapCP<Comparendo> respuesta = new MaxHeapCP<Comparendo>();
-
-
-		String string = pFechaInicio;
-		String[] parts = string.split("-");
-		String part1 = parts[0];
-		String[] Fechita1 = part1.split("/");
-
-		int mesInicial = Integer.parseInt(Fechita1[1]) -1;
-		int diaIncial = Integer.parseInt(Fechita1[2]);
-
-		Date fechaInicio = new Date(118, mesInicial,diaIncial);
-		String part2 = parts[1];
-		String[] horita = part2.split(":");
-
-		fechaInicio.setHours(Integer.parseInt(horita[0]));
-		fechaInicio.setMinutes(Integer.parseInt(horita[1]));
-		fechaInicio.setSeconds(Integer.parseInt(horita[2]));
-
-		String string1 = pFechaFinal;
-		String[] partsC = string1.split("-");
-		String part1C = partsC[0];
-		String[] Fechita1C = part1C.split("/");
-
-		int mesFinal = Integer.parseInt(Fechita1C[1]) -1;
-		int diaFinal = Integer.parseInt(Fechita1C[2]);
-
-		Date fechaFinal = new Date(118, mesFinal,diaFinal);
-		String part2C = partsC[1];
-		String[] horitaC = part2C.split(":");
-
-		fechaFinal.setHours(Integer.parseInt(horitaC[0]));
-		fechaFinal.setMinutes(Integer.parseInt(horitaC[1]));
-		fechaFinal.setSeconds(Integer.parseInt(horitaC[2]));
-
-
-		RedBlackBST<Date,Comparendo> arbol = new RedBlackBST<Date,Comparendo>();
-
-		int tam = elementos.darNumElementos();
-		for(int i = 0; i<tam; i++)
-		{
-			Comparendo este = elementos.sacarMax();
-			arbol.put(este.darFecha(), este);
-		}
-
-		Queue<Comparendo> datosPre = arbol.valuesInRange(fechaInicio, fechaFinal);
-		int tamFnal = datosPre.getSize();
-		for(int j = 0; j<tamFnal;j++)
-		{
-			Comparendo fin = datosPre.dequeue();
-			fin.cambiarComparacion(3);
-
-			if(fin.darLocalidad().equalsIgnoreCase(pLocalidad))
-			{
-				respuesta.agregar(fin);
-			}
-		}
-
-		return respuesta;
-	}
-
-	public MaxHeapCP<Comparendo> requerimiento1B()
-	{
-		MaxHeapCP<Comparendo> elementos = clonar();
-		int num = elementos.darNumElementos();
-		MaxHeapCP<Comparendo> elementosFinales = new MaxHeapCP<Comparendo>();
-
-		for(int i = 0; i<num;i++)
-		{
-			Comparendo este = elementos.sacarMax();
-			este.cambiarComparacion(2);
-
-
-			elementosFinales.agregar(este);
-		}
-
-		return elementosFinales;
-	}
-
-	public MaxHeapCP<Comparendo> requerimiento2B(String pmedio_dete,String pclase_vehi, String ptipo_servi,String plocalidad)
-	{
-		LLaves2B llave = new LLaves2B(pmedio_dete,pclase_vehi,ptipo_servi,plocalidad);
-		SeparateChaining<LLaves2B,MaxHeapCP<Comparendo>> estructura = new SeparateChaining<LLaves2B,MaxHeapCP<Comparendo>>();
-		MaxHeapCP<Comparendo> respuesta = new MaxHeapCP<Comparendo>();
-		MaxHeapCP<Comparendo> trabajable = clonar();
-
-		int corredor = trabajable.darNumElementos();
-
-		for(int i = 0; i <corredor;i++)
-		{
-			Comparendo actual = trabajable.sacarMax();
-			actual.cambiarComparacion(3);
-
-			LLaves2B llaveq = new LLaves2B(actual.darMedioDeteccion(),actual.darClaseVeiculo(),actual.darTipoServicio(),actual.darLocalidad());
-
-
-			MaxHeapCP<Comparendo> agregada = new MaxHeapCP<Comparendo>();
-			if(estructura.get(llaveq) == null)
-			{
-				agregada.agregar(actual);
-			}
-			else
-			{
-				MaxHeapCP<Comparendo> estano = estructura.delete(llaveq);
-				estano.agregar(actual);
-				agregada = estano;
-			}
-
-
-			estructura.put(llaveq, agregada);
-		}
-
-		respuesta = estructura.get(llave);
-
-		return respuesta;
-	}
-
-	public MaxHeapCP<Comparendo> requerimiento3B(double  pLatitudInicial,double pLatitudFinal, String pTipoVeiculo)
-	{
-		MaxHeapCP<Comparendo> elementos = clonar();
-		MaxHeapCP<Comparendo> respuesta = new MaxHeapCP<Comparendo>();
-
-		RedBlackBST<Double,Comparendo> arbol = new RedBlackBST<Double,Comparendo>();
-
-		int tam = elementos.darNumElementos();
-		for(int i = 0; i<tam; i++)
-		{
-			Comparendo este = elementos.sacarMax();
-			arbol.put(este.darLatitud(), este);
-		}
-
-		Queue<Comparendo> datosPre = arbol.valuesInRange(pLatitudInicial, pLatitudFinal);
-
-		int tamFnal = datosPre.getSize();
-
-		for(int j = 0; j<tamFnal;j++)
-		{
-			Comparendo fin = datosPre.dequeue();
-			fin.cambiarComparacion(0);
-
-			if(fin.darClaseVeiculo().equalsIgnoreCase(pTipoVeiculo))
-			{
-				respuesta.agregar(fin);
-			}
-		}
-
-
-		return respuesta;
-	}
-
-	public String requerimiento1C(int rangoInicial, int rangoFinal, int tamno)
-	{
-		MaxHeapCP<Comparendo> estructura = new MaxHeapCP<Comparendo>();
-		comparendosProcesar = arbol.size()/365;
-		Date fechaInicio = new Date(118, 0,rangoInicial);
-		Date fechaDia = new Date(118, 0,rangoFinal);
-		Date fechaFinal = new Date(118, 0,rangoFinal+1);
-
-		Queue<Comparendo> datosPre = arbol.valuesInRange(fechaInicio, fechaFinal);
-
-
-
-		String respueta ="";
-		//		2018/01/01-2018/01/07 | ************
-
-		String diaInicial = fechaInicio.getDate()+"";
-		String mesInicail = fechaInicio.getMonth()+1+"";
-
-		String diaF = fechaDia.getDate()+"";
-		String mesF = fechaDia.getMonth()+1+"";
-
-		if(diaInicial.length() ==1)
-			diaInicial = "0"+diaInicial;
-		if(mesInicail.length() == 1)
-			mesInicail = "0"+mesInicail;
-		if(diaF.length() == 1)
-			diaF = "0"+diaF;
-		if(mesF.length() ==1)
-			mesF = "0"+mesF;
-
-		respueta = "2018/"+mesInicail+"/"+diaInicial+"-"+"2018/"+mesF+"/"+diaF+"  |  ";
-
-		int tamnoCola = datosPre.getSize();
-
-		boolean termine = false;
-
-		while(termine == false)
-		{
-			if(tamnoCola - tamno>=0)
-			{
-				tamnoCola = tamnoCola -tamno;
-				respueta = respueta +"*";
-			}
-			else
-				termine = true;
-
-		}
-
-		return respueta;
-	}
-
-	public String requerimiento2C(int rangoInicial, int rangoFinal, int tamno)
-	{	
-
-		Date fechaInicio = new Date(118, 0,rangoInicial);
-		Date fechaFinal = new Date(118, 0,rangoFinal);
-
-
-		comparendosProcesar = arbol.size()/365;
-
-		Queue<Comparendo> comDia = arbol.valuesInRange(fechaInicio, fechaFinal);
-
-		int tam = comDia.getSize();
-
-		for(int i =0; i<tam; i++)
-		{
-			estructuraAplicacion2C.enqueue(comDia.dequeue());
-		}
-
-		String respueta1 ="";
-		String respueta2 ="";
-
-		String diaInicial = fechaInicio.getDate()+"";
-		String mesInicail = fechaInicio.getMonth()+1+"";
-
-		if(diaInicial.length() ==1)
-			diaInicial = "0"+diaInicial;
-		if(mesInicail.length() == 1)
-			mesInicail = "0"+mesInicail;
-
-		respueta1 = "2018/"+mesInicail+"/"+diaInicial+"  |  ";
-		respueta2 = "            |  ";
-
-		int tamnoCola = estructuraAplicacion2C.getSize();
-
-		boolean termine = false;
-		int contador = 0;
-		while(termine == false)
-		{ 
-
-			if(tamnoCola - tamno>=0)
-			{
-				contador++;
-				tamnoCola = tamnoCola - tamno;
-				respueta1 = respueta1 +"*";
-			}
-			else
-				termine = true;
-			if(contador == 2)
-				termine = true;
-
-			if(contador == 0 && termine == true)
-				respueta1 = respueta1 +"*";
-		}
-
-
-		for(int i = 0; i<comparendosProcesar && estructuraAplicacion2C.isEmpty()==false; i++)
-		{
-
-			Comparendo comaren= estructuraAplicacion2C.dequeue();
-			calcularCosto(comaren,fechaInicio);
-			numeroDiasTotales2C += comaren.darNumerosDias();
-			numeroComparendos2C++;
-
-
-			if(comaren.darDescripcion().contains("INMOVILIZADO") == true)
-			{
-				dias400 += comaren.darNumerosDias();
-				numer400++;
-				if(diasMax400 < comaren.darNumerosDias())
-					diasMax400 = comaren.darNumerosDias();
-				if(diasMin400 > comaren.darNumerosDias())
-					diasMin400= comaren.darNumerosDias();
-			}
-			else if(comaren.darDescripcion().contains("LICENCIA") == true)
-			{
-				dias40 += comaren.darNumerosDias();
-				numer40++;
-				if(diasMax40 < comaren.darNumerosDias())
-					diasMax40 = comaren.darNumerosDias();
-				if(diasMin40 > comaren.darNumerosDias())
-					diasMin40= comaren.darNumerosDias();
-			}
-			else
-			{
-				dias4 += comaren.darNumerosDias();
-				numer4++;
-				if(diasMax4 < comaren.darNumerosDias())
-					diasMax4 = comaren.darNumerosDias();
-				if(diasMin4 > comaren.darNumerosDias())
-					diasMin4= comaren.darNumerosDias();
-			}
-
-		}
-
-		int tamanoTotal = estructuraAplicacion2C.getSize();
-		termine = false;
-
-		while(termine == false)
-		{
-			if(tamanoTotal - tamno>=0)
-			{
-				tamanoTotal = tamanoTotal - tamno;
-				respueta2 = respueta2 +"#";
-			}
-			else
-				termine = true;
-		}
-
-		return respueta1+"\n"+respueta2;
-	}
-
-	//	private void calcularCosto(Queue<Comparendo> cola, Date fecha)
-	//	{
-	//		Queue<Comparendo> copia = new Queue<Comparendo>();
-	//
-	//		int tam = cola.getSize();
-	//
-	//		for(int i = 0; i < tam; i++)
-	//		{
-	//			Comparendo este = cola.dequeue();
-	//			este.cambiarDia(fecha);
-	//			copia.enqueue(este);
-	//
-	//			if(este.darDescripcion().contains("INMOVILIZADO") == true)
-	//				costoCola+= 400;
-	//			else if(este.darDescripcion().contains("LICENCIA") == true)
-	//				costoCola+= 40;
-	//			else
-	//				costoCola+= 4;	
-	//		}	
-	//		estructuraAplicacion2C = copia;		
-	//	}
-
-
-	private void calcularCosto(Comparendo comparendo, Date fecha)
-	{		
-		comparendo.cambiarDia(fecha);
-
-
-		if(comparendo.darDescripcion().contains("INMOVILIZADO") == true)
-			costoCola+= 400*comparendo.darNumerosDias();
-		else if(comparendo.darDescripcion().contains("LICENCIA") == true)
-			costoCola+= 40*comparendo.darNumerosDias();
-		else
-			costoCola+= 4*comparendo.darNumerosDias();		
-	}
-
-	public String promedioDeDias2C()
-	{
-		Queue<Comparendo> comDia = new Queue<Comparendo>();
-
-		for(int i = 0; estructuraAplicacion2C.isEmpty()==false; i++)
-		{
-
-			Comparendo comaren= estructuraAplicacion2C.dequeue();
-			numeroDiasTotales2C += comaren.darNumerosDias();
-			numeroComparendos2C++;
-			comDia.enqueue(comaren);
-		}
-
-		estructuraAplicacion2C = comDia;
-
-		int valor = numeroDiasTotales2C/numeroComparendos2C;
-		return valor+"";
-	}
-
-	public String tablaInformacion()
-	{
-		Queue<Comparendo> comDia = new Queue<Comparendo>();
-
-		for(int i = 0; estructuraAplicacion2C.isEmpty()==false; i++)
-		{
-
-			Comparendo comaren= estructuraAplicacion2C.dequeue();
-			if(comaren.darDescripcion().contains("INMOVILIZADO") == true)
-			{
-				dias400 += comaren.darNumerosDias();
-				numer400++;
-				if(diasMax400 < comaren.darNumerosDias())
-					diasMax400 = comaren.darNumerosDias();
-				if(diasMin400 > comaren.darNumerosDias())
-					diasMin400= comaren.darNumerosDias();
-			}
-			else if(comaren.darDescripcion().contains("LICENCIA") == true)
-			{
-				dias40 += comaren.darNumerosDias();
-				numer40++;
-				if(diasMax40 < comaren.darNumerosDias())
-					diasMax40 = comaren.darNumerosDias();
-				if(diasMin40 > comaren.darNumerosDias())
-					diasMin40= comaren.darNumerosDias();
-			}
-			else
-			{
-				dias4 += comaren.darNumerosDias();
-				numer4++;
-				if(diasMax4 < comaren.darNumerosDias())
-					diasMax4 = comaren.darNumerosDias();
-				if(diasMin4 > comaren.darNumerosDias())
-					diasMin4= comaren.darNumerosDias();
-			}
-			comDia.enqueue(comaren);
-		}
-
-		estructuraAplicacion2C = comDia;
-
-		String respuesta = "";
-		int valor400 = dias400/numer400;
-		int valor40 = dias40/numer40;
-		int valor4 = dias4/numer4;
-
-		respuesta +="        $400              "+ diasMin400 +"                 "+ valor400+"                 "+diasMax400+"\n"+"----------------------------------------------------------------------------"+"\n";
-		respuesta +="        $40               "+ diasMin40 +"                 "+ valor40+"                 "+diasMax40+"\n"+"----------------------------------------------------------------------------"+"\n";
-		respuesta +="        $4                "+ diasMin4 +"                 "+ valor4+"                 "+diasMax4;
-
-		return respuesta;
-	}
-
-	public String requerimiento3C(int rangoInicial, int rangoFinal, int tamno)
-	{
-		comparendosProcesar = arbol.size()/365;
-		Integer diaInicail = rangoInicial;
-		Integer diaFianl = rangoFinal;
-		Date fechaInicio = new Date(118, 0,rangoInicial);
-		Date fechaFinal = new Date(118, 0,rangoFinal);
-
-
-
-		Queue<Comparendo> comDia = arbol.valuesInRange(fechaInicio, fechaFinal);
-		
-
-		
-		String respueta1 ="";
-		String respueta2 ="";
-
-		String diaInicial = fechaInicio.getDate()+"";
-		String mesInicail = fechaInicio.getMonth()+1+"";
-
-		if(diaInicial.length() ==1)
-			diaInicial = "0"+diaInicial;
-		if(mesInicail.length() == 1)
-			mesInicail = "0"+mesInicail;
-
-		respueta1 = "2018/"+mesInicail+"/"+diaInicial+"  |  ";
-		respueta2 = "            |  ";
-
-		int tamnoCola = calcularElemensotos(rangoInicial);
-
-		boolean termine = false;
-		int contador = 0;
-
-		while(termine == false)
-		{ 
-
-			if(tamnoCola - tamno>=0)
-			{
-				contador++;
-				tamnoCola = tamnoCola - tamno;
-				respueta1 = respueta1 +"*";
-			}
-			else
-				termine = true;
-			if(contador == 2)
-				termine = true;
-
-			if(contador == 0 && termine == true)
-				respueta1 = respueta1 +"*";
-		}
-
-		int elementosEliminados = eliminarNuevoSistema400(1, rangoInicial);
-
-		if(elementosEliminados <comparendosProcesar)
-			elementosEliminados += eliminarNuevoSistema40(1, rangoInicial,comparendosProcesar- elementosEliminados);
-		if(elementosEliminados <comparendosProcesar)
-			elementosEliminados += eliminarNuevoSistema4(1, rangoInicial,comparendosProcesar- elementosEliminados);
-
-		//		for(int i = 0; i<comparendosProcesar && estructura3C.esVacia()==false; i++)
-		//		{
-		//			Comparendo comaren = estructura3C.sacarMax();
-		//			numeroDiasTotales3C += comaren.darNumerosDias();
-		//			numeroComparendos3C++;
-		//
-		//			if(comaren.darDescripcion().contains("INMOVILIZADO") == true)
-		//			{
-		//				dias400N += comaren.darNumerosDias();
-		//				numer400N++;
-		//				if(diasMax400N < comaren.darNumerosDias())
-		//					diasMax400N = comaren.darNumerosDias();
-		//				if(diasMin400N > comaren.darNumerosDias())
-		//					diasMin400N= comaren.darNumerosDias();
-		//			}
-		//			else if(comaren.darDescripcion().contains("LICENCIA") == true)
-		//			{
-		//				dias40N += comaren.darNumerosDias();
-		//				numer40N++;
-		//				if(diasMax40N < comaren.darNumerosDias())
-		//					diasMax40N = comaren.darNumerosDias();
-		//				if(diasMin40N > comaren.darNumerosDias())
-		//					diasMin40N= comaren.darNumerosDias();
-		//			}
-		//			else
-		//			{
-		//				dias4N += comaren.darNumerosDias();
-		//				numer4N++;
-		//				if(diasMax4N < comaren.darNumerosDias())
-		//					diasMax4N = comaren.darNumerosDias();
-		//				if(diasMin4N > comaren.darNumerosDias())
-		//					diasMin4N= comaren.darNumerosDias();
-		//			}
-		//		}
-		//
-				int tamanoTotal = calcularElemensotos(rangoInicial);
-				termine = false;
-		
-				while(termine == false)
-				{
-					if(tamanoTotal - tamno>=0)
-					{
-						tamanoTotal = tamanoTotal - tamno;
-						respueta2 = respueta2 +"#";
-					}
-					else
-						termine = true;
-				}
-
-		return respueta1+"\n"+respueta2;
-	}
-
-	public int eliminarNuevoSistema400(Integer diaInicial, Integer diaFinal)
-	{
-		Date fechaFinal = new Date(118, 0,diaFinal);
-		comparendosProcesar = arbol.size()/365;
-		int contador = 0;
-		for(Integer i = 1; i<diaFinal+1 && contador!=comparendosProcesar; i++)
-		{
-
-			if(nuevoArbol.get(i) !=null)
-			{
-				int elementos = nuevoArbol.get(i).darNumElementos();
-				if(elementos!=0)
-					for(int j = 0; j < elementos &&  contador!=comparendosProcesar; j++)
-					{
-
-						if(nuevoArbol.get(i).darMax().darDescripcion().contains("INMOVILIZADO")== true)
-						{
-							Comparendo este = nuevoArbol.get(i).sacarMax();
-							contador ++;
-							este.cambiarDia(fechaFinal);
-							costoMaxHeap+= 400*este.darNumerosDias();
-							numeroDiasTotales3C += este.darNumerosDias();
-							numeroComparendos3C++;
-
-							dias400N += este.darNumerosDias();
-							numer400N++;
-							if(diasMax400N < este.darNumerosDias())
-								diasMax400N = este.darNumerosDias();
-							if(diasMin400N > este.darNumerosDias())
-								diasMin400N= este.darNumerosDias();
-						}
-					}
-			}
-		}
-		return contador;
-	}
-
-
-	public int eliminarNuevoSistema40(Integer diaInicial, Integer diaFinal, int cuantos)
-	{
-		Date fechaFinal = new Date(118, 0,diaFinal);
-
-		int contador = 0;
-		for(Integer i = 1; i<diaFinal+1 && contador!=cuantos; i++)
-		{
-
-			if(nuevoArbol.get(i) !=null)
-			{
-				int elementos = nuevoArbol.get(i).darNumElementos();
-				if(elementos!=0)
-				{
-					for(int j = 0; j<elementos && nuevoArbol.get(i).darMax().darDescripcion().contains("LICENCIA") == true && contador!=cuantos; j++)
-					{
-						Comparendo este = nuevoArbol.get(i).sacarMax();
-						contador ++;
-						este.cambiarDia(fechaFinal);
-						costoMaxHeap+= 40*este.darNumerosDias();
-						numeroDiasTotales3C += este.darNumerosDias();
-						numeroComparendos3C++;
-
-						dias40N += este.darNumerosDias();
-						numer40N++;
-						if(diasMax40N < este.darNumerosDias())
-							diasMax40N = este.darNumerosDias();
-						if(diasMin40N > este.darNumerosDias())
-							diasMin40N= este.darNumerosDias();
-					}
-				}
-			}
-		}
-		return contador;
-	}
-	public int eliminarNuevoSistema4(Integer diaInicial, Integer diaFinal, int cuantos)
-	{
-		Date fechaFinal = new Date(118, 0,diaFinal);
-
-		int contador = 0;
-		for(Integer i = 1; i<diaFinal+1 && contador!=cuantos; i++)
-		{
-			if(nuevoArbol.get(i) !=null)
-			{
-				int elementos = nuevoArbol.get(i).darNumElementos();
-				if(elementos!=0)
-				{
-					for(int j = 0; j<elementos && contador!=cuantos; j++)
-					{
-						Comparendo este = nuevoArbol.get(i).sacarMax();
-						contador ++;
-						este.cambiarDia(fechaFinal);
-						costoMaxHeap+= 4*este.darNumerosDias();
-						numeroDiasTotales3C += este.darNumerosDias();
-						numeroComparendos3C++;
-
-						dias4N += este.darNumerosDias();
-						numer4N++;
-						if(diasMax4N < este.darNumerosDias())
-							diasMax4N = este.darNumerosDias();
-						if(diasMin4N > este.darNumerosDias())
-							diasMin4N= este.darNumerosDias();
-					}
-				}
-			}
-		}
-		return contador;
-	}
-
-	public int calcularElemensotos(Integer diaFinal)
-	{	
-		int contador = 0;
-		for(Integer i = 1; i<diaFinal+1 ; i++)
-		{
-			if(nuevoArbol.get(i) !=null)
-			{
-				int elementos = nuevoArbol.get(i).darNumElementos();
-				if(elementos!=0)
-				{
-					for(int j = 0; j<elementos ; j++)
-					{
-
-						contador ++;
-					}
-				}
-			}
-		}
-		return contador;
-	}
-
-	public String promedioDeDias3C()
-	{
-		Integer i = 39;
-
-		while(nuevoArbol.get(i).esVacia() == false)
-		{
-			eliminarNuevoSistema400(1, 365);
-			eliminarNuevoSistema40(1, 365,1500);
-			eliminarNuevoSistema4(1, 365,1500);
-		}
-
-		int valor = numeroDiasTotales3C/numeroComparendos3C;
-		return valor+"";
-	}
-
-	public String tablaNuevoSistema()
-	{
-		Integer i = 39;
-
-		while(nuevoArbol.get(i).esVacia() == false)
-		{
-			eliminarNuevoSistema400(1, 365);
-			eliminarNuevoSistema40(1, 365,1500);
-			eliminarNuevoSistema4(1, 365,1500);
-		}
-
-
-		String respuesta = "";
-		int valor400 = dias400N/numer400N;
-		int valor40 = dias40N/numer40N;
-		int valor4 = dias4N/numer4N;
-
-		respuesta +="        $400              "+ diasMin400N +"                 "+ valor400+"                 "+diasMax400N+"\n"+"----------------------------------------------------------------------------"+"\n";
-		respuesta +="        $40               "+ diasMin40N +"                 "+ valor40+"                 "+diasMax40N+"\n"+"----------------------------------------------------------------------------"+"\n";
-		respuesta +="        $4                "+ diasMin4N +"                 "+ valor4+"                 "+diasMax4N;
-
-		return respuesta;
-	}
-
-
+	
 	public MaxHeapCP<Comparendo> clonar()
 	{
 		MaxHeapCP<Comparendo> nueva =  new MaxHeapCP<Comparendo>();
 		MaxHeapCP<Comparendo> vieja =  new MaxHeapCP<Comparendo>();
-		int cor = listaCarga.darNumElementos();
+		int cor = listaComparenodos.darNumElementos();
 
 		for(int i = 0; i<cor;i++)
 		{
-			Comparendo agre = listaCarga.sacarMax();
+			Comparendo agre = listaComparenodos.sacarMax();
 			nueva.agregar(agre);
 			vieja.agregar(agre);
 		}
 
-		listaCarga = vieja;
+		listaComparenodos = vieja;
 
 		return nueva;			
 	}
 
-	public String indicarMes(int inicial)
+	public void cargarVertices( String pArchivo, Graph<Integer, Bogota_Vertice> grafo, Graph<Integer, Bogota_Vertice> grafo1) throws Exception
 	{
-		if(inicial == 0)
-			return "Enero";
-		else if(inicial == 1)
-			return "Febrero";
-		else if(inicial == 2)
-			return "Marzo";
-		else if(inicial == 3)
-			return "Abril";
-		else if(inicial == 4)
-			return "Mayo";
-		else if(inicial == 5)
-			return "Junio";
-		else if(inicial == 6)
-			return "Julio";
-		else if(inicial == 7)
-			return "Agosto";
-		else if(inicial == 8)
-			return "Septiembre";
-		else if(inicial == 9)
-			return "Octubre";
-		else if(inicial == 10)
-			return "Noviembre";
-		else if(inicial == 11)
-			return "Diciembre";
+		String texto, valores[];
 
-		return "";
+		int id;
+		double  latitud, longitud;
+
+
+		try
+		{
+			File datos = new File( pArchivo );
+			FileReader fr = new FileReader( datos );
+			BufferedReader lector = new BufferedReader( fr );
+
+			texto = lector.readLine( );
+			while(texto != null)
+			{
+				valores = texto.split( "," );
+
+				id = Integer.parseInt(valores[ 0 ]);
+				longitud = Double.parseDouble(valores[ 1 ]);
+				latitud = Double.parseDouble(valores[ 2 ]);
+
+				Bogota_Vertice nuevo = new Bogota_Vertice(id,latitud,longitud );
+				grafo.addVertex(id, nuevo);
+
+				if((longitud< -74.062707 && longitud > -74.094723) && (latitud <  4.621360 && latitud > 4.597714 ))
+					grafo1.addVertex(id, nuevo);
+
+				// Siguiente línea
+				texto = lector.readLine( );
+			}
+			lector.close( );
+		}
+		catch( IOException e )
+		{
+			throw new Exception( "Error al cargar los datos almacenados de vehículos." );
+		}
+		catch( NumberFormatException e )
+		{
+			throw new Exception( "El archivo no tiene el formato esperado." );
+		}
 	}
 
-	public int indicarDia(String inicial)
+	public void cargarArcos( String pArchivo, Graph<Integer, Bogota_Vertice> grafo, Graph<Integer, Bogota_Vertice> grafo1) throws Exception
 	{
-		if(inicial.equalsIgnoreCase("L"))
-			return 1;
-		else if(inicial.equalsIgnoreCase("M"))
-			return 2;
-		else if(inicial.equalsIgnoreCase("I"))
-			return 3;
-		else if(inicial.equalsIgnoreCase("J"))
-			return 4;
-		else if(inicial.equalsIgnoreCase("V"))
-			return 5;
-		else if(inicial.equalsIgnoreCase("S"))
-			return 6;
-		else if(inicial.equalsIgnoreCase("D"))
-			return 0;
-		return -1;
+		String texto, valores[];
+
+		Integer idOrigen;
+		Integer idDestino;
+
+
+		try
+		{
+			File datos = new File( pArchivo );
+			FileReader fr = new FileReader( datos );
+			BufferedReader lector = new BufferedReader( fr );
+
+			texto = lector.readLine( );
+			texto = lector.readLine( );
+			texto = lector.readLine( );
+			texto = lector.readLine( );
+			while(texto != null)
+			{
+				valores = texto.split( " " );
+				int tam = valores.length;
+
+				idOrigen = Integer.parseInt(valores[ 0 ]);
+				Bogota_Vertice origen = grafo.getInfoVertex(idOrigen);
+
+				for(int i = 1;i<tam;i++)
+				{
+					idDestino = Integer.parseInt(valores[ i ]);
+					Bogota_Vertice destino = grafo.getInfoVertex(idDestino);
+
+					if(origen != null && destino != null)
+					{
+						double distancia = distanciador.distance(origen.darLatitud(), origen.darLongitud(), destino.darLatitud(), destino.darLongitud());
+						grafo.addEdge(idOrigen, idDestino, distancia);grafo1.addEdge(idOrigen, idDestino, distancia);
+					}
+				}
+
+
+
+
+				// Siguiente línea
+				texto = lector.readLine( );
+			}
+			lector.close( );
+		}
+		catch( IOException e )
+		{
+			throw new Exception( "Error al cargar los datos almacenados de vehículos." );
+		}
+		catch( NumberFormatException e )
+		{
+			throw new Exception( "El archivo no tiene el formato esperado." );
+		}
 	}
 
-	public String indicarDia2(String inicial)
+	public void crearJson()
 	{
-		if(inicial.equalsIgnoreCase("L"))
-			return "Lunes";
-		else if(inicial.equalsIgnoreCase("M"))
-			return "Martes";
-		else if(inicial.equalsIgnoreCase("I"))
-			return "Miercoles";
-		else if(inicial.equalsIgnoreCase("J"))
-			return "Jueves";
-		else if(inicial.equalsIgnoreCase("V"))
-			return "Viernes";
-		else if(inicial.equalsIgnoreCase("S"))
-			return "Sabado";
-		else if(inicial.equalsIgnoreCase("D"))
-			return "Domingo";
-		return "";
+
+		JSONObject obj = new JSONObject();
+		obj.put("Num_vertices", darNumeroVertices());
+		obj.put("Num_arcos", darNumeroArcos());
+
+
+		JSONArray list = new JSONArray();
+
+		Queue<Integer> llaves = darGrafo().vectores();
+		for(int i=0; i<darNumeroVertices(); i++)
+		{
+			Bogota_Vertice elemento = darGrafo().getInfoVertex(llaves.dequeue());
+			JSONObject propiedades = new JSONObject();
+
+			propiedades.put("Longitud", elemento.darLongitud());
+			propiedades.put("Latitud", elemento.darLatitud());
+			propiedades.put("Id",elemento.darId());
+			list.add(propiedades);
+
+		}
+		obj.put("Vertices", list);
+
+
+		JSONArray list2 = new JSONArray();
+
+		Queue<Integer> llaves1 = darGrafo().vectores();
+		for(int i=0; i<darNumeroVertices(); i++)
+		{
+			Integer origen = llaves1.dequeue();
+			Queue<Integer> adya = grafo.adj(origen);
+
+			if(adya.isEmpty() == false)
+			{
+				while(adya.isEmpty() == false)
+				{
+					Integer destino = adya.dequeue();
+					if(origen<destino)
+					{
+						JSONObject propiedades = new JSONObject();
+
+						propiedades.put("IdOrigen", origen);
+						propiedades.put("IdDestino", destino);
+						Double costo = grafo.getCostArc(origen, destino);
+						propiedades.put("Costo",costo);
+						list2.add(propiedades);
+					}
+				}
+			}
+		}
+		obj.put("Arcos", list2);
+
+
+
+		try {
+
+			FileWriter file = new FileWriter("data/mallaVial.json");
+			file.write(obj.toJSONString());
+			file.flush();
+			file.close();
+
+		} catch (IOException e) {
+			//manejar error
+		}
 	}
 
-	public String tranformarTipoVeculo(String lista)
+	public void acomplar()
 	{
-		String listica = "";
+		JSONObject obj = new JSONObject();
 
-		if(lista.equals("1"))
+		JSONArray list = new JSONArray();
+
+
+
+
+		
+		Queue<Integer> compa = comparendos.keys();
+		while(compa.isEmpty()==false)
 		{
-			listica = "AUTOMÃ“VIL";
-		} 
-		else if(lista.equals("2"))
-		{
-			listica = "BICICLETA";
-		}
-		else if(lista.equals("3"))
-		{
-			listica = "BUS";
-		}
-		else if(lista.equals("4"))
-		{
-			listica = "BUSETA";
-		}
-		else if(lista.equals("5"))
-		{
-			listica = "CAMIONETA";
-		}
-		else if(lista.equals("6"))
-		{
-			listica = "CAMPERO";
-		}
-		else if(lista.equals("7"))
-		{
-			listica =  "MOTOCICLETA";
+			JSONObject propiedades = new JSONObject();
+			Comparendo moment = comparendos.get(compa.dequeue());
+			int idMoment =  buscarVertice.buscarVertice( moment.darLatitud(), moment.darLongitud());
+			grafo.getVertex(idMoment).agregarComparendo(moment);
+			moment.cambiarIdVertice(idMoment);
+			propiedades.put("IdVertice", idMoment);
+			propiedades.put("IdComparendo", moment.darObjec());
+			list.add(propiedades);
 		}
 
-		return listica;
+
+		obj.put("Acoplamientos", list);
+
+
+		try {
+
+			FileWriter file = new FileWriter("data/acoplamiento.json");
+			file.write(obj.toJSONString());
+			file.flush();
+			file.close();
+
+		} catch (IOException e) {
+			//manejar error
+		}
 	}
 
-	public String tranformarMedioDeteccion(String lista)
+
+
+	public void acomplarEstaciones()
 	{
-		String listica = "";
-
-		if(lista.equals("1"))
+		int tamEstaciones = estcionesPolicia.size();
+		Queue<Integer> estaci =  estcionesPolicia.keys();
+		for(int i = 0; i<tamEstaciones; i++)
 		{
-			listica = "AUTOMÃ“VIL";
-		} 
-		else if(lista.equals("2"))
-		{
-			listica = "DEAP";
+			EstacionPolicia moment = estcionesPolicia.get(estaci.dequeue());
+			int idMoment =  buscarVertice.buscarVertice( moment.darLatitud(), moment.darLongitud());
+			grafo.getVertex(idMoment).agregarEstacion(moment);
+			moment.cambiarIdVertice(idMoment);
 		}
-
-
-		return listica;
 	}
-
-	public String tranformarTipoServicio(String lista)
+	
+	public void cargarAcoplamiento()
 	{
-		String listica = "";
+		JsonReader reader;
+		try {
+			reader = new JsonReader(new FileReader("data/acoplamiento.json"));
+			JsonElement elem = JsonParser.parseReader(reader); 
+			JsonArray e2 = elem.getAsJsonObject().get("Acoplamientos").getAsJsonArray();
 
-		if(lista.equals("1"))
-		{
-			listica = "PÃºblico";
-		} 
-		else if(lista.equals("2"))
-		{
-			listica = "Oficial";
+
+			for(JsonElement e: e2) {
+
+				int IdVertice = e.getAsJsonObject().get("IdVertice").getAsInt();
+				int IdComparendo = e.getAsJsonObject().get("IdComparendo").getAsInt();
+
+				
+				Comparendo moment = comparendos.get(IdComparendo);
+				grafo.getVertex(IdVertice).agregarComparendo(moment);
+				moment.cambiarIdVertice(IdVertice);
+				
+			}
+
+		} catch (FileNotFoundException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 		}
-		else if(lista.equals("3"))
-		{
-			listica = "Particular";
-		}
-
-
-		return listica;
 	}
-
-	public String transformarLocalidad(String lista)
+	
+	public void actualizarArcos()
 	{
-		String listica = "";
-
-		if(lista.equals("1"))
+		Queue<Integer> vertices = grafo.vectores();
+		
+		while(vertices.isEmpty() == false)
 		{
-			listica = "PUENTE ARANDA";
-		} 
-		else if(lista.equals("2"))
-		{
-			listica = "FONTIBON";
+			Integer id = vertices.dequeue();
+			Queue<Arco<Integer, Bogota_Vertice>> arcos = grafo.getVertex(id).darAdyacentes().darArcos();
+			while(arcos.isEmpty() == false)
+			{
+				arcos.dequeue().modificarNumComparendos();
+			}
 		}
-		else if(lista.equals("3"))
-		{
-			listica = "ENGATIVA";
-		}
-		else if(lista.equals("4"))
-		{
-			listica = "SUBA";
-		}
-		else if(lista.equals("5"))
-		{
-			listica = "USME";
-		}
-		else if(lista.equals("6"))
-		{
-			listica = "CIUDAD BOLIVAR";
-		}
-		else if(lista.equals("7"))
-		{
-			listica =  "USAQUEN";
-		}
-		else if(lista.equals("8"))
-		{
-			listica = "BOSA";
-		}
-		else if(lista.equals("9"))
-		{
-			listica = "SAN CRISTOBAL";
-		}
-		else if(lista.equals("10"))
-		{
-			listica = "KENNEDY";
-		}
-		else if(lista.equals("11"))
-		{
-			listica = "CHAPINERO";
-		}
-		else if(lista.equals("12"))
-		{
-			listica = "MARTIRES";
-		}
-		else if(lista.equals("13"))
-		{
-			listica =  "BARRIOS UNIDOS";
-		}
-		else if(lista.equals("14"))
-		{
-			listica =  "TUNJUELITO";
-		}
-		else if(lista.equals("15"))
-		{
-			listica =  "SANTA FE";
-		}
-		else if(lista.equals("16"))
-		{
-			listica =  "ANTONIO NARIÃ‘O";
-		}
-
-		return listica;
 	}
-	private int numeroDiaAno(Date fecha)
+	
+	public Queue<Integer> requerimiento1A(double latOrigen, double longOrigen,double latDestino, double longDestino)
 	{
-		int respuesta = 0;
-
-		if(fecha.getMonth() == 0)
-			respuesta = fecha.getDate();
-		else if(fecha.getMonth() == 1)
-			respuesta = fecha.getDate() +31;
-		else if(fecha.getMonth() == 2)
-			respuesta = fecha.getDate() +59;
-		else if(fecha.getMonth() == 3)
-			respuesta = fecha.getDate() +90;
-		else if(fecha.getMonth() == 4)
-			respuesta = fecha.getDate() +120;
-		else if(fecha.getMonth() == 5)
-			respuesta = fecha.getDate() +151;
-		else if(fecha.getMonth() == 6)
-			respuesta = fecha.getDate() +181;
-		else if(fecha.getMonth() == 7)
-			respuesta = fecha.getDate() +212;
-		else if(fecha.getMonth() == 8)
-			respuesta = fecha.getDate() +243;
-		else if(fecha.getMonth() == 9)
-			respuesta = fecha.getDate() +273;
-		else if(fecha.getMonth() == 10)
-			respuesta = fecha.getDate() +304;
-		else if(fecha.getMonth() == 11)
-			respuesta = fecha.getDate() +334;
-
-		return respuesta;
+		return null;
+	}
+	
+	public Graph<Integer, Bogota_Vertice> requerimiento2A(int pNumero)
+	{
+		return null;
+	}
+	
+	public Queue<Integer> requerimiento1B(double latOrigen, double longOrigen,double latDestino, double longDestino)
+	{
+		return null;
+	}
+	
+	public Graph<Integer, Bogota_Vertice> requerimiento2B(int pNumero)
+	{
+		return null;
+	}
+	
+	public Graph<Integer, Bogota_Vertice> requerimiento1C(int pNumero)
+	{
+		return null;
+	}
+	
+	public Graph<Integer, Bogota_Vertice> mapaRequerimiento2C()
+	{
+		return null;
 	}
 }
 
