@@ -204,31 +204,12 @@ public class Graph<K extends Comparable<K>,V> implements IGraph<K,V>
 			grafo.get(llaves.dequeue()).desmarcar();
 		}
 	}
-
-	public void bfs(K s) 
-	{
-		
-	}
 	
-	public void dijkstra(K s) 
+	public Graph<K ,V> dijkstra(K origen, K destino, int modo) 
 	{
-		
+		return null;
 	}
-	
-	public void lazyPrim(K s) 
-	{
 		
-	}
-	
-	public void eagerPrim(K s) 
-	{
-		
-	}
-	public void kruskal(K s) 
-	{
-		
-	}
-	
 	public void dfs(K s) 
 	{
 		int color = numConectados;

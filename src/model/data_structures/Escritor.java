@@ -322,33 +322,699 @@ public class Escritor
 		bw.close();
 	}
 	
-	public void mapaRequerimiento1A(Graph<Integer, Bogota_Vertice> grafo, int idOrigen, int idDestino, Queue<Integer> camino)
+	public void mapaRequerimiento1A(Graph<Integer, Bogota_Vertice> grafo) throws IOException 
 	{
+		String ruta = "data/mapaR1A.html";
+		File archivo = new File(ruta);
+		BufferedWriter bw;
+
+		bw = new BufferedWriter(new FileWriter(archivo));
+
+		bw.write("<!DOCTYPE html>\n");
+		bw.write("<html> \n");
+		bw.write("<head>\n");
+		bw.write("  <meta name=\"viewport\" content=\"initial-scale=1.0,\n");
+		bw.write("user-scalable=no\">\n" );
+		bw.write("  <meta charset=\"utf-8\">\n"); 
+		bw.write("  <title>Simple Polylines</title>\n"); 
+		bw.write("  <style>\n"); 
+		bw.write("    #map {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("    }\n"); 
+		bw.write("    html,\n"); 
+		bw.write("    body {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("      margin: 0;\n"); 
+		bw.write("      padding: 0;\n"); 
+		bw.write("    }\n"); 
+		bw.write("  </style>\n"); 
+		bw.write("</head>\n"); 
+		bw.write("<body>\n"); 
+		bw.write("  <div id=\"map\"></div>\n"); 
+		bw.write("  <script>\n"); 
+		bw.write("    function initMap() {\n"); 
+		bw.write("      var map = new google.maps.Map\n"); 
+		bw.write("(document.getElementById('map'), {\n"); 
+		bw.write("        zoom: 15,\n"); 
+		bw.write("        center: {\n"); 
+		bw.write("          lat: 4.609537,\n"); 
+		bw.write("          lng: -74.078715\n"); 
+		bw.write("        },\n"); 
+		bw.write("        mapTypeId: 'roadmap'\n"); 
+		bw.write("      });\n"); 
+		bw.write("      var line;\n"); 
+		bw.write("      var path;\n"); 
 		
+		//--------------------------
+		//Vertices
+		//--------------------------
+
+		int tam = grafo.V();
+		Queue<Integer> llaves = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Bogota_Vertice elemneto = grafo.getInfoVertex(llaves.dequeue());
+			bw.write("      path = new google.maps.Circle({\n"); 
+			bw.write("		center: {\n"); 
+			bw.write("          lat: "+elemneto.darLatitud()+",\n"); 
+			bw.write("          lng: "+elemneto.darLongitud()+"\n"); 
+			bw.write("        },\n"); 
+			bw.write("	      radius:10,\n"); 
+			bw.write("        strokeColor: '#FF0000',\n"); 
+			bw.write("        strokeWeight: 1\n"); 
+			bw.write("      });\n"); 
+			bw.write("      path.setMap(map);\n"); 
+
+		}
+
+		//--------------------------
+		//Arcos
+		//--------------------------
+
+		int numAr = grafo.E();
+		Queue<Integer> arcos = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Integer origen = arcos.dequeue();
+			Queue<Integer> llavesArcos = grafo.adj(origen);
+			while(llavesArcos.isEmpty() == false)
+			{
+				Integer destino = llavesArcos.dequeue();
+
+				if(origen < destino)
+				{
+					Bogota_Vertice verOrigen = grafo.getInfoVertex(origen);
+					Bogota_Vertice verDestino = grafo.getInfoVertex(destino);
+					bw.write("      line = [{\n"); 
+					bw.write("          lat: "+verOrigen.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verOrigen.darLongitud()+",\n"); 
+					bw.write("       },\n"); 
+					bw.write("       {\n"); 
+					bw.write("          lat: "+verDestino.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verDestino.darLongitud()+"\n"); 
+					bw.write("        }\n"); 
+					bw.write("      ];\n"); 
+					bw.write("      path = new google.maps.Polyline({\n"); 
+					bw.write("        path: line,\n"); 
+					bw.write("        strokeColor: '#FF0000',\n"); 
+					bw.write("        strokeWeight: 1\n"); 
+					bw.write("      });\n"); 
+					bw.write("      path.setMap(map);\n");
+				}
+			}
+		}
+
+		//--------------------------------------------------
+		bw.write("    }\n");
+		bw.write("  </script>\n"); 
+		bw.write("  <script async defer \n"); 
+		bw.write("src=\"https://maps.googleapis.com/maps/api/js?\n"); 
+		bw.write("key=&callback=initMap\">\n"); 
+		bw.write("  </script>\n"); 
+		bw.write("</body>\n"); 
+		bw.write("</html>\n"); 
+
+
+		bw.close();
 	}
 	
-	public void mapaRequerimiento2A(Graph<Integer, Bogota_Vertice> grafo)
+	public void mapaRequerimiento2A(Graph<Integer, Bogota_Vertice> grafo) throws IOException 
 	{
+		String ruta = "data/mapaR2A.html";
+		File archivo = new File(ruta);
+		BufferedWriter bw;
+
+		bw = new BufferedWriter(new FileWriter(archivo));
+
+		bw.write("<!DOCTYPE html>\n");
+		bw.write("<html> \n");
+		bw.write("<head>\n");
+		bw.write("  <meta name=\"viewport\" content=\"initial-scale=1.0,\n");
+		bw.write("user-scalable=no\">\n" );
+		bw.write("  <meta charset=\"utf-8\">\n"); 
+		bw.write("  <title>Simple Polylines</title>\n"); 
+		bw.write("  <style>\n"); 
+		bw.write("    #map {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("    }\n"); 
+		bw.write("    html,\n"); 
+		bw.write("    body {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("      margin: 0;\n"); 
+		bw.write("      padding: 0;\n"); 
+		bw.write("    }\n"); 
+		bw.write("  </style>\n"); 
+		bw.write("</head>\n"); 
+		bw.write("<body>\n"); 
+		bw.write("  <div id=\"map\"></div>\n"); 
+		bw.write("  <script>\n"); 
+		bw.write("    function initMap() {\n"); 
+		bw.write("      var map = new google.maps.Map\n"); 
+		bw.write("(document.getElementById('map'), {\n"); 
+		bw.write("        zoom: 15,\n"); 
+		bw.write("        center: {\n"); 
+		bw.write("          lat: 4.609537,\n"); 
+		bw.write("          lng: -74.078715\n"); 
+		bw.write("        },\n"); 
+		bw.write("        mapTypeId: 'roadmap'\n"); 
+		bw.write("      });\n"); 
+		bw.write("      var line;\n"); 
+		bw.write("      var path;\n"); 
 		
+		//--------------------------
+		//Vertices
+		//--------------------------
+
+		int tam = grafo.V();
+		Queue<Integer> llaves = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Bogota_Vertice elemneto = grafo.getInfoVertex(llaves.dequeue());
+			bw.write("      path = new google.maps.Circle({\n"); 
+			bw.write("		center: {\n"); 
+			bw.write("          lat: "+elemneto.darLatitud()+",\n"); 
+			bw.write("          lng: "+elemneto.darLongitud()+"\n"); 
+			bw.write("        },\n"); 
+			bw.write("	      radius:10,\n"); 
+			bw.write("        strokeColor: '#FF0000',\n"); 
+			bw.write("        strokeWeight: 1\n"); 
+			bw.write("      });\n"); 
+			bw.write("      path.setMap(map);\n"); 
+
+		}
+
+		//--------------------------
+		//Arcos
+		//--------------------------
+
+		int numAr = grafo.E();
+		Queue<Integer> arcos = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Integer origen = arcos.dequeue();
+			Queue<Integer> llavesArcos = grafo.adj(origen);
+			while(llavesArcos.isEmpty() == false)
+			{
+				Integer destino = llavesArcos.dequeue();
+
+				if(origen < destino)
+				{
+					Bogota_Vertice verOrigen = grafo.getInfoVertex(origen);
+					Bogota_Vertice verDestino = grafo.getInfoVertex(destino);
+					bw.write("      line = [{\n"); 
+					bw.write("          lat: "+verOrigen.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verOrigen.darLongitud()+",\n"); 
+					bw.write("       },\n"); 
+					bw.write("       {\n"); 
+					bw.write("          lat: "+verDestino.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verDestino.darLongitud()+"\n"); 
+					bw.write("        }\n"); 
+					bw.write("      ];\n"); 
+					bw.write("      path = new google.maps.Polyline({\n"); 
+					bw.write("        path: line,\n"); 
+					bw.write("        strokeColor: '#FF0000',\n"); 
+					bw.write("        strokeWeight: 1\n"); 
+					bw.write("      });\n"); 
+					bw.write("      path.setMap(map);\n");
+				}
+			}
+		}
+
+		//--------------------------------------------------
+		bw.write("    }\n");
+		bw.write("  </script>\n"); 
+		bw.write("  <script async defer \n"); 
+		bw.write("src=\"https://maps.googleapis.com/maps/api/js?\n"); 
+		bw.write("key=&callback=initMap\">\n"); 
+		bw.write("  </script>\n"); 
+		bw.write("</body>\n"); 
+		bw.write("</html>\n"); 
+
+
+		bw.close();
 	}
 	
-	public void mapaRequerimiento1B(Graph<Integer, Bogota_Vertice> grafo, int idOrigen, int idDestino, Queue<Integer> camino)
+	public void mapaRequerimiento1B(Graph<Integer, Bogota_Vertice> grafo) throws IOException 
 	{
+		String ruta = "data/mapaR1B.html";
+		File archivo = new File(ruta);
+		BufferedWriter bw;
+
+		bw = new BufferedWriter(new FileWriter(archivo));
+
+		bw.write("<!DOCTYPE html>\n");
+		bw.write("<html> \n");
+		bw.write("<head>\n");
+		bw.write("  <meta name=\"viewport\" content=\"initial-scale=1.0,\n");
+		bw.write("user-scalable=no\">\n" );
+		bw.write("  <meta charset=\"utf-8\">\n"); 
+		bw.write("  <title>Simple Polylines</title>\n"); 
+		bw.write("  <style>\n"); 
+		bw.write("    #map {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("    }\n"); 
+		bw.write("    html,\n"); 
+		bw.write("    body {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("      margin: 0;\n"); 
+		bw.write("      padding: 0;\n"); 
+		bw.write("    }\n"); 
+		bw.write("  </style>\n"); 
+		bw.write("</head>\n"); 
+		bw.write("<body>\n"); 
+		bw.write("  <div id=\"map\"></div>\n"); 
+		bw.write("  <script>\n"); 
+		bw.write("    function initMap() {\n"); 
+		bw.write("      var map = new google.maps.Map\n"); 
+		bw.write("(document.getElementById('map'), {\n"); 
+		bw.write("        zoom: 15,\n"); 
+		bw.write("        center: {\n"); 
+		bw.write("          lat: 4.609537,\n"); 
+		bw.write("          lng: -74.078715\n"); 
+		bw.write("        },\n"); 
+		bw.write("        mapTypeId: 'roadmap'\n"); 
+		bw.write("      });\n"); 
+		bw.write("      var line;\n"); 
+		bw.write("      var path;\n"); 
 		
+		//--------------------------
+		//Vertices
+		//--------------------------
+
+		int tam = grafo.V();
+		Queue<Integer> llaves = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Bogota_Vertice elemneto = grafo.getInfoVertex(llaves.dequeue());
+			bw.write("      path = new google.maps.Circle({\n"); 
+			bw.write("		center: {\n"); 
+			bw.write("          lat: "+elemneto.darLatitud()+",\n"); 
+			bw.write("          lng: "+elemneto.darLongitud()+"\n"); 
+			bw.write("        },\n"); 
+			bw.write("	      radius:10,\n"); 
+			bw.write("        strokeColor: '#FF0000',\n"); 
+			bw.write("        strokeWeight: 1\n"); 
+			bw.write("      });\n"); 
+			bw.write("      path.setMap(map);\n"); 
+
+		}
+
+		//--------------------------
+		//Arcos
+		//--------------------------
+
+		int numAr = grafo.E();
+		Queue<Integer> arcos = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Integer origen = arcos.dequeue();
+			Queue<Integer> llavesArcos = grafo.adj(origen);
+			while(llavesArcos.isEmpty() == false)
+			{
+				Integer destino = llavesArcos.dequeue();
+
+				if(origen < destino)
+				{
+					Bogota_Vertice verOrigen = grafo.getInfoVertex(origen);
+					Bogota_Vertice verDestino = grafo.getInfoVertex(destino);
+					bw.write("      line = [{\n"); 
+					bw.write("          lat: "+verOrigen.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verOrigen.darLongitud()+",\n"); 
+					bw.write("       },\n"); 
+					bw.write("       {\n"); 
+					bw.write("          lat: "+verDestino.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verDestino.darLongitud()+"\n"); 
+					bw.write("        }\n"); 
+					bw.write("      ];\n"); 
+					bw.write("      path = new google.maps.Polyline({\n"); 
+					bw.write("        path: line,\n"); 
+					bw.write("        strokeColor: '#FF0000',\n"); 
+					bw.write("        strokeWeight: 1\n"); 
+					bw.write("      });\n"); 
+					bw.write("      path.setMap(map);\n");
+				}
+			}
+		}
+
+		//--------------------------------------------------
+		bw.write("    }\n");
+		bw.write("  </script>\n"); 
+		bw.write("  <script async defer \n"); 
+		bw.write("src=\"https://maps.googleapis.com/maps/api/js?\n"); 
+		bw.write("key=&callback=initMap\">\n"); 
+		bw.write("  </script>\n"); 
+		bw.write("</body>\n"); 
+		bw.write("</html>\n"); 
+
+
+		bw.close();
 	}
 	
-	public void mapaRequerimiento2B(Graph<Integer, Bogota_Vertice> grafo)
+	public void mapaRequerimiento2B(Graph<Integer, Bogota_Vertice> grafo) throws IOException 
 	{
+		String ruta = "data/mapaR2B.html";
+		File archivo = new File(ruta);
+		BufferedWriter bw;
+
+		bw = new BufferedWriter(new FileWriter(archivo));
+
+		bw.write("<!DOCTYPE html>\n");
+		bw.write("<html> \n");
+		bw.write("<head>\n");
+		bw.write("  <meta name=\"viewport\" content=\"initial-scale=1.0,\n");
+		bw.write("user-scalable=no\">\n" );
+		bw.write("  <meta charset=\"utf-8\">\n"); 
+		bw.write("  <title>Simple Polylines</title>\n"); 
+		bw.write("  <style>\n"); 
+		bw.write("    #map {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("    }\n"); 
+		bw.write("    html,\n"); 
+		bw.write("    body {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("      margin: 0;\n"); 
+		bw.write("      padding: 0;\n"); 
+		bw.write("    }\n"); 
+		bw.write("  </style>\n"); 
+		bw.write("</head>\n"); 
+		bw.write("<body>\n"); 
+		bw.write("  <div id=\"map\"></div>\n"); 
+		bw.write("  <script>\n"); 
+		bw.write("    function initMap() {\n"); 
+		bw.write("      var map = new google.maps.Map\n"); 
+		bw.write("(document.getElementById('map'), {\n"); 
+		bw.write("        zoom: 15,\n"); 
+		bw.write("        center: {\n"); 
+		bw.write("          lat: 4.609537,\n"); 
+		bw.write("          lng: -74.078715\n"); 
+		bw.write("        },\n"); 
+		bw.write("        mapTypeId: 'roadmap'\n"); 
+		bw.write("      });\n"); 
+		bw.write("      var line;\n"); 
+		bw.write("      var path;\n"); 
 		
+		//--------------------------
+		//Vertices
+		//--------------------------
+
+		int tam = grafo.V();
+		Queue<Integer> llaves = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Bogota_Vertice elemneto = grafo.getInfoVertex(llaves.dequeue());
+			bw.write("      path = new google.maps.Circle({\n"); 
+			bw.write("		center: {\n"); 
+			bw.write("          lat: "+elemneto.darLatitud()+",\n"); 
+			bw.write("          lng: "+elemneto.darLongitud()+"\n"); 
+			bw.write("        },\n"); 
+			bw.write("	      radius:10,\n"); 
+			bw.write("        strokeColor: '#FF0000',\n"); 
+			bw.write("        strokeWeight: 1\n"); 
+			bw.write("      });\n"); 
+			bw.write("      path.setMap(map);\n"); 
+
+		}
+
+		//--------------------------
+		//Arcos
+		//--------------------------
+
+		int numAr = grafo.E();
+		Queue<Integer> arcos = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Integer origen = arcos.dequeue();
+			Queue<Integer> llavesArcos = grafo.adj(origen);
+			while(llavesArcos.isEmpty() == false)
+			{
+				Integer destino = llavesArcos.dequeue();
+
+				if(origen < destino)
+				{
+					Bogota_Vertice verOrigen = grafo.getInfoVertex(origen);
+					Bogota_Vertice verDestino = grafo.getInfoVertex(destino);
+					bw.write("      line = [{\n"); 
+					bw.write("          lat: "+verOrigen.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verOrigen.darLongitud()+",\n"); 
+					bw.write("       },\n"); 
+					bw.write("       {\n"); 
+					bw.write("          lat: "+verDestino.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verDestino.darLongitud()+"\n"); 
+					bw.write("        }\n"); 
+					bw.write("      ];\n"); 
+					bw.write("      path = new google.maps.Polyline({\n"); 
+					bw.write("        path: line,\n"); 
+					bw.write("        strokeColor: '#FF0000',\n"); 
+					bw.write("        strokeWeight: 1\n"); 
+					bw.write("      });\n"); 
+					bw.write("      path.setMap(map);\n");
+				}
+			}
+		}
+
+		//--------------------------------------------------
+		bw.write("    }\n");
+		bw.write("  </script>\n"); 
+		bw.write("  <script async defer \n"); 
+		bw.write("src=\"https://maps.googleapis.com/maps/api/js?\n"); 
+		bw.write("key=&callback=initMap\">\n"); 
+		bw.write("  </script>\n"); 
+		bw.write("</body>\n"); 
+		bw.write("</html>\n"); 
+
+
+		bw.close();
 	}
 	
-	public void mapaRequerimiento1C(Graph<Integer, Bogota_Vertice> grafo)
+	public void mapaRequerimiento1C(Graph<Integer, Bogota_Vertice> grafo) throws IOException 
 	{
+		String ruta = "data/mapa1C.html";
+		File archivo = new File(ruta);
+		BufferedWriter bw;
+
+		bw = new BufferedWriter(new FileWriter(archivo));
+
+		bw.write("<!DOCTYPE html>\n");
+		bw.write("<html> \n");
+		bw.write("<head>\n");
+		bw.write("  <meta name=\"viewport\" content=\"initial-scale=1.0,\n");
+		bw.write("user-scalable=no\">\n" );
+		bw.write("  <meta charset=\"utf-8\">\n"); 
+		bw.write("  <title>Simple Polylines</title>\n"); 
+		bw.write("  <style>\n"); 
+		bw.write("    #map {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("    }\n"); 
+		bw.write("    html,\n"); 
+		bw.write("    body {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("      margin: 0;\n"); 
+		bw.write("      padding: 0;\n"); 
+		bw.write("    }\n"); 
+		bw.write("  </style>\n"); 
+		bw.write("</head>\n"); 
+		bw.write("<body>\n"); 
+		bw.write("  <div id=\"map\"></div>\n"); 
+		bw.write("  <script>\n"); 
+		bw.write("    function initMap() {\n"); 
+		bw.write("      var map = new google.maps.Map\n"); 
+		bw.write("(document.getElementById('map'), {\n"); 
+		bw.write("        zoom: 15,\n"); 
+		bw.write("        center: {\n"); 
+		bw.write("          lat: 4.609537,\n"); 
+		bw.write("          lng: -74.078715\n"); 
+		bw.write("        },\n"); 
+		bw.write("        mapTypeId: 'roadmap'\n"); 
+		bw.write("      });\n"); 
+		bw.write("      var line;\n"); 
+		bw.write("      var path;\n"); 
 		
+		//--------------------------
+		//Vertices
+		//--------------------------
+
+		int tam = grafo.V();
+		Queue<Integer> llaves = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Bogota_Vertice elemneto = grafo.getInfoVertex(llaves.dequeue());
+			bw.write("      path = new google.maps.Circle({\n"); 
+			bw.write("		center: {\n"); 
+			bw.write("          lat: "+elemneto.darLatitud()+",\n"); 
+			bw.write("          lng: "+elemneto.darLongitud()+"\n"); 
+			bw.write("        },\n"); 
+			bw.write("	      radius:10,\n"); 
+			bw.write("        strokeColor: '#FF0000',\n"); 
+			bw.write("        strokeWeight: 1\n"); 
+			bw.write("      });\n"); 
+			bw.write("      path.setMap(map);\n"); 
+
+		}
+
+		//--------------------------
+		//Arcos
+		//--------------------------
+
+		int numAr = grafo.E();
+		Queue<Integer> arcos = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Integer origen = arcos.dequeue();
+			Queue<Integer> llavesArcos = grafo.adj(origen);
+			while(llavesArcos.isEmpty() == false)
+			{
+				Integer destino = llavesArcos.dequeue();
+
+				if(origen < destino)
+				{
+					Bogota_Vertice verOrigen = grafo.getInfoVertex(origen);
+					Bogota_Vertice verDestino = grafo.getInfoVertex(destino);
+					bw.write("      line = [{\n"); 
+					bw.write("          lat: "+verOrigen.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verOrigen.darLongitud()+",\n"); 
+					bw.write("       },\n"); 
+					bw.write("       {\n"); 
+					bw.write("          lat: "+verDestino.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verDestino.darLongitud()+"\n"); 
+					bw.write("        }\n"); 
+					bw.write("      ];\n"); 
+					bw.write("      path = new google.maps.Polyline({\n"); 
+					bw.write("        path: line,\n"); 
+					bw.write("        strokeColor: '#FF0000',\n"); 
+					bw.write("        strokeWeight: 1\n"); 
+					bw.write("      });\n"); 
+					bw.write("      path.setMap(map);\n");
+				}
+			}
+		}
+
+		//--------------------------------------------------
+		bw.write("    }\n");
+		bw.write("  </script>\n"); 
+		bw.write("  <script async defer \n"); 
+		bw.write("src=\"https://maps.googleapis.com/maps/api/js?\n"); 
+		bw.write("key=&callback=initMap\">\n"); 
+		bw.write("  </script>\n"); 
+		bw.write("</body>\n"); 
+		bw.write("</html>\n"); 
+
+
+		bw.close();
 	}
 	
-	public void mapaRequerimiento2C(Graph<Integer, Bogota_Vertice> grafo)
+	public void mapaRequerimiento2C(Graph<Integer, Bogota_Vertice> grafo) throws IOException 
 	{
+		String ruta = "data/mapa2C.html";
+		File archivo = new File(ruta);
+		BufferedWriter bw;
+
+		bw = new BufferedWriter(new FileWriter(archivo));
+
+		bw.write("<!DOCTYPE html>\n");
+		bw.write("<html> \n");
+		bw.write("<head>\n");
+		bw.write("  <meta name=\"viewport\" content=\"initial-scale=1.0,\n");
+		bw.write("user-scalable=no\">\n" );
+		bw.write("  <meta charset=\"utf-8\">\n"); 
+		bw.write("  <title>Simple Polylines</title>\n"); 
+		bw.write("  <style>\n"); 
+		bw.write("    #map {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("    }\n"); 
+		bw.write("    html,\n"); 
+		bw.write("    body {\n"); 
+		bw.write("      height: 100%;\n"); 
+		bw.write("      margin: 0;\n"); 
+		bw.write("      padding: 0;\n"); 
+		bw.write("    }\n"); 
+		bw.write("  </style>\n"); 
+		bw.write("</head>\n"); 
+		bw.write("<body>\n"); 
+		bw.write("  <div id=\"map\"></div>\n"); 
+		bw.write("  <script>\n"); 
+		bw.write("    function initMap() {\n"); 
+		bw.write("      var map = new google.maps.Map\n"); 
+		bw.write("(document.getElementById('map'), {\n"); 
+		bw.write("        zoom: 15,\n"); 
+		bw.write("        center: {\n"); 
+		bw.write("          lat: 4.609537,\n"); 
+		bw.write("          lng: -74.078715\n"); 
+		bw.write("        },\n"); 
+		bw.write("        mapTypeId: 'roadmap'\n"); 
+		bw.write("      });\n"); 
+		bw.write("      var line;\n"); 
+		bw.write("      var path;\n"); 
 		
+		//--------------------------
+		//Vertices
+		//--------------------------
+
+		int tam = grafo.V();
+		Queue<Integer> llaves = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Bogota_Vertice elemneto = grafo.getInfoVertex(llaves.dequeue());
+			bw.write("      path = new google.maps.Circle({\n"); 
+			bw.write("		center: {\n"); 
+			bw.write("          lat: "+elemneto.darLatitud()+",\n"); 
+			bw.write("          lng: "+elemneto.darLongitud()+"\n"); 
+			bw.write("        },\n"); 
+			bw.write("	      radius:10,\n"); 
+			bw.write("        strokeColor: '#FF0000',\n"); 
+			bw.write("        strokeWeight: 1\n"); 
+			bw.write("      });\n"); 
+			bw.write("      path.setMap(map);\n"); 
+
+		}
+
+		//--------------------------
+		//Arcos
+		//--------------------------
+
+		int numAr = grafo.E();
+		Queue<Integer> arcos = grafo.vectores();
+		for(int i = 0; i<tam; i++)
+		{
+			Integer origen = arcos.dequeue();
+			Queue<Integer> llavesArcos = grafo.adj(origen);
+			while(llavesArcos.isEmpty() == false)
+			{
+				Integer destino = llavesArcos.dequeue();
+
+				if(origen < destino)
+				{
+					Bogota_Vertice verOrigen = grafo.getInfoVertex(origen);
+					Bogota_Vertice verDestino = grafo.getInfoVertex(destino);
+					bw.write("      line = [{\n"); 
+					bw.write("          lat: "+verOrigen.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verOrigen.darLongitud()+",\n"); 
+					bw.write("       },\n"); 
+					bw.write("       {\n"); 
+					bw.write("          lat: "+verDestino.darLatitud()+",\n"); 
+					bw.write("          lng:  "+verDestino.darLongitud()+"\n"); 
+					bw.write("        }\n"); 
+					bw.write("      ];\n"); 
+					bw.write("      path = new google.maps.Polyline({\n"); 
+					bw.write("        path: line,\n"); 
+					bw.write("        strokeColor: '#FF0000',\n"); 
+					bw.write("        strokeWeight: 1\n"); 
+					bw.write("      });\n"); 
+					bw.write("      path.setMap(map);\n");
+				}
+			}
+		}
+
+		//--------------------------------------------------
+		bw.write("    }\n");
+		bw.write("  </script>\n"); 
+		bw.write("  <script async defer \n"); 
+		bw.write("src=\"https://maps.googleapis.com/maps/api/js?\n"); 
+		bw.write("key=&callback=initMap\">\n"); 
+		bw.write("  </script>\n"); 
+		bw.write("</body>\n"); 
+		bw.write("</html>\n"); 
+
+
+		bw.close();
 	}
 }

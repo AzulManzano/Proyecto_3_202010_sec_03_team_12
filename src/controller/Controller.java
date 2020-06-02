@@ -1,5 +1,6 @@
 package controller;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -9,6 +10,8 @@ import java.util.Scanner;
 import model.data_structures.Arco;
 import model.data_structures.Bogota_Vertice;
 import model.data_structures.Comparendo;
+import model.data_structures.Graph;
+import model.data_structures.Haversine;
 import model.data_structures.MaxHeapCP;
 import model.data_structures.Nodo;
 import model.data_structures.Queue;
@@ -26,7 +29,7 @@ public class Controller
 
 	/* Instancia de la Vista*/
 	private View view;
-
+	private Haversine distanciador;
 	/**
 	 * Crear la vista y el modelo del proyecto
 	 * @param capacidad tamaNo inicial del arreglo
@@ -35,6 +38,7 @@ public class Controller
 	{
 		view = new View();
 		modelo = new Modelo();
+		distanciador = new Haversine();
 	}
 
 	public void run() throws ParseException 
@@ -99,6 +103,89 @@ public class Controller
 				view.printMessage("");
 				break;
 
+			case 3:			
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("OBTENER EL CAMINO DE COSTO MÍNIMO ENTRE DOS UBICACIONES GEOGRÁFICAS POR DISTANCIA.");
+				view.printMessage("Ingrese la latitud 1:");
+				int rec1A1 = lector.nextInt();
+				view.printMessage("Ingrese la longitud 1:");
+				int rec1A2 = lector.nextInt();
+				view.printMessage("Ingrese la latitud 2:");
+				int rec1A3 = lector.nextInt();
+				view.printMessage("Ingrese la longitud 2:");
+				int rec1A4 = lector.nextInt();
+				try {
+					Graph<Integer, Bogota_Vertice> grafo1A = modelo.requerimiento1A(rec1A1, rec1A2, rec1A3, rec1A4);
+					view.printMessage("El total de vértices: "+grafo1A.V());
+					Queue<Integer> laves = grafo1A.vectores();
+					while(laves.isEmpty()== false)
+					{
+						Integer llave = laves.dequeue();
+						view.printMessage("Id: "+grafo1A.getInfoVertex(llave).darId()+ ", latitud: "+grafo1A.getInfoVertex(llave).darLatitud() +", longitud: "+grafo1A.getInfoVertex(llave).darLongitud());
+					}
+					view.printMessage("El costo mínimo: "+distanciador.distance(rec1A1, rec1A2, rec1A3, rec1A4));
+					int ditanciaEstimada1A = 0;
+					Queue<Integer> laves1 = grafo1A.vectores();
+					while(laves1.isEmpty()== false)
+					{
+						
+					}
+					view.printMessage("La distancia estimada: "+ ditanciaEstimada1A);
+				
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				view.printMessage("");
+				view.printMessage("");
+				break;
+				
+			case 4:			
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				break;
+				
+			case 5:			
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				break;
+				
+			case 6:			
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				break;
+				
+			case 7:			
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				break;
+				
+			case 8:			
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				view.printMessage("");
+				break;
+				
 			case 0:			
 				view.printMessage("--------- \n Hasta pronto !! \n---------"); 
 				lector.close();

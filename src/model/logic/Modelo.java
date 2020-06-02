@@ -39,6 +39,7 @@ import model.data_structures.Nodo;
 import model.data_structures.Queue;
 import model.data_structures.SeparateChaining;
 import model.data_structures.SequentialSearch;
+import model.data_structures.Vertice;
 
 /**
  * Definicion del modelo del mundo
@@ -313,7 +314,7 @@ public class Modelo
 		}
 		return elementosFinales;
 	}
-	
+
 	public MaxHeapCP<Comparendo> clonar()
 	{
 		MaxHeapCP<Comparendo> nueva =  new MaxHeapCP<Comparendo>();
@@ -508,7 +509,7 @@ public class Modelo
 
 
 
-		
+
 		Queue<Integer> compa = comparendos.keys();
 		while(compa.isEmpty()==false)
 		{
@@ -552,7 +553,7 @@ public class Modelo
 			moment.cambiarIdVertice(idMoment);
 		}
 	}
-	
+
 	public void cargarAcoplamiento()
 	{
 		JsonReader reader;
@@ -567,11 +568,11 @@ public class Modelo
 				int IdVertice = e.getAsJsonObject().get("IdVertice").getAsInt();
 				int IdComparendo = e.getAsJsonObject().get("IdComparendo").getAsInt();
 
-				
+
 				Comparendo moment = comparendos.get(IdComparendo);
 				grafo.getVertex(IdVertice).agregarComparendo(moment);
 				moment.cambiarIdVertice(IdVertice);
-				
+
 			}
 
 		} catch (FileNotFoundException e) {
@@ -579,11 +580,11 @@ public class Modelo
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void actualizarArcos()
 	{
 		Queue<Integer> vertices = grafo.vectores();
-		
+
 		while(vertices.isEmpty() == false)
 		{
 			Integer id = vertices.dequeue();
@@ -594,35 +595,165 @@ public class Modelo
 			}
 		}
 	}
-	
-	public Queue<Integer> requerimiento1A(double latOrigen, double longOrigen,double latDestino, double longDestino)
+
+	public Graph<Integer, Bogota_Vertice> requerimiento1A(double latOrigen, double longOrigen,double latDestino, double longDestino) throws IOException
 	{
-		return null;
+		Integer idDestino = buscarVertice.buscarVertice(latDestino, longDestino);
+		Integer idOrigen = buscarVertice.buscarVertice(latOrigen, longOrigen);
+
+		Graph<Integer, Bogota_Vertice> momentanio = grafo.dijkstra(idOrigen, idDestino, 0);
+
+		escritor.mapaRequerimiento1A(momentanio);
+
+		return momentanio;
 	}
-	
-	public Graph<Integer, Bogota_Vertice> requerimiento2A(int pNumero)
+
+	public Graph<Integer, Bogota_Vertice> requerimiento2A(int pNumero) throws IOException
 	{
-		return null;
+		Graph<Integer, Bogota_Vertice> ultimo = new Graph<Integer, Bogota_Vertice>();
+		Comparendo elemento1 = listaComparenodos.sacarMax();
+		for(int i =0; i<pNumero-1;i++)
+		{
+			Comparendo elemento2 = listaComparenodos.sacarMax();
+			Graph<Integer, Bogota_Vertice> momentanio = grafo.dijkstra(elemento1.darIdVertice(),elemento2.darIdVertice() , 0);
+			elemento1 = elemento2;
+			unirGrafos(ultimo,momentanio);
+		}
+		escritor.mapaRequerimiento2A(ultimo);
+		return ultimo;
 	}
-	
-	public Queue<Integer> requerimiento1B(double latOrigen, double longOrigen,double latDestino, double longDestino)
+
+	public Graph<Integer, Bogota_Vertice> requerimiento1B(double latOrigen, double longOrigen,double latDestino, double longDestino) throws IOException
 	{
-		return null;
+		Integer idDestino = buscarVertice.buscarVertice(latDestino, longDestino);
+		Integer idOrigen = buscarVertice.buscarVertice(latOrigen, longOrigen);
+
+		Graph<Integer, Bogota_Vertice> momentanio = grafo.dijkstra(idOrigen, idDestino, 1);
+
+		escritor.mapaRequerimiento1B(momentanio);
+
+		return momentanio;
 	}
-	
-	public Graph<Integer, Bogota_Vertice> requerimiento2B(int pNumero)
+
+	public Graph<Integer, Bogota_Vertice> requerimiento2B(int pNumero) throws IOException
 	{
-		return null;
+		Queue<Integer> comparendos = new Queue<Integer>();
+		int mayor = 0;
+		int mayorsito = 0;
+		for(int i =0; i<pNumero;i++)
+		{
+			Queue<Integer> llaves = grafo.vectores();
+			while(llaves.isEmpty() == false)
+			{
+				Vertice<Integer, Bogota_Vertice> vertice = grafo.getVertex(llaves.dequeue());
+				if(vertice.darListaComparenos().size() >= mayor)
+				{
+					if(mayorsito != 0)
+					{
+						if(mayorsito > vertice.darListaComparenos().size())
+						{
+							mayor = vertice.darListaComparenos().size();
+
+						}
+					}
+					else
+					{
+						mayor = vertice.darListaComparenos().size();
+					}
+
+				}
+			}
+			mayorsito = mayor;
+			mayor = 0;
+		}
+
+		Graph<Integer, Bogota_Vertice> ultimo = new Graph<Integer, Bogota_Vertice>();
+		Integer elemento1 = comparendos.dequeue();
+		while(comparendos.isEmpty() == false)
+		{
+			Integer elemento2 = comparendos.dequeue();
+			Graph<Integer, Bogota_Vertice> momentanio = grafo.dijkstra(elemento1,elemento2 , 0);
+			elemento1 = elemento2;
+			unirGrafos(ultimo,momentanio);
+		}
+		escritor.mapaRequerimiento2B(ultimo);
+		return ultimo;
 	}
-	
-	public Graph<Integer, Bogota_Vertice> requerimiento1C(int pNumero)
+
+	public Graph<Integer, Bogota_Vertice> requerimiento1C(int pNumero) throws IOException
 	{
-		return null;
+		Graph<Integer, Bogota_Vertice> ultimo = new Graph<Integer, Bogota_Vertice>();
+		for(int i =0; i<pNumero;i++)
+		{
+			Comparendo elemento1 = listaComparenodos.sacarMax();
+			EstacionPolicia elemento2 = null;
+			double distanciaInicial =100000;
+			Queue<Integer> llaves = estcionesPolicia.keys();
+
+			while(llaves.isEmpty() == false)
+			{
+				Integer llave = llaves.dequeue();
+				if(distanciador.distance(estcionesPolicia.get(llave).darLatitud(), estcionesPolicia.get(llave).darLongitud(), elemento1.darLatitud(), elemento1.darLongitud())<distanciaInicial);
+				{	
+					elemento2 = estcionesPolicia.get(llave);
+					distanciaInicial = distanciador.distance(estcionesPolicia.get(llave).darLatitud(), estcionesPolicia.get(llave).darLongitud(), elemento1.darLatitud(), elemento1.darLongitud());
+				}
+			}
+
+			Graph<Integer, Bogota_Vertice> momentanio = grafo.dijkstra(elemento1.darIdVertice(),elemento2.darIdVertice(), 0);
+			unirGrafos(ultimo,momentanio);
+		}
+		escritor.mapaRequerimiento1C(ultimo);
+		return ultimo;
 	}
-	
-	public Graph<Integer, Bogota_Vertice> mapaRequerimiento2C()
+
+	public Graph<Integer, Bogota_Vertice> mapaRequerimiento2C() throws IOException
 	{
-		return null;
+		Graph<Integer, Bogota_Vertice> ultimo = new Graph<Integer, Bogota_Vertice>();
+		for(int i =0; i<grafo.V();i++)
+		{
+			Comparendo elemento1 = listaComparenodos.sacarMax();
+			EstacionPolicia elemento2 = null;
+			double distanciaInicial =100000;
+			Queue<Integer> llaves = estcionesPolicia.keys();
+
+			while(llaves.isEmpty() == false)
+			{
+				Integer llave = llaves.dequeue();
+				if(distanciador.distance(estcionesPolicia.get(llave).darLatitud(), estcionesPolicia.get(llave).darLongitud(), elemento1.darLatitud(), elemento1.darLongitud())<distanciaInicial);
+				{	
+					elemento2 = estcionesPolicia.get(llave);
+					distanciaInicial = distanciador.distance(estcionesPolicia.get(llave).darLatitud(), estcionesPolicia.get(llave).darLongitud(), elemento1.darLatitud(), elemento1.darLongitud());
+				}
+			}
+
+			Graph<Integer, Bogota_Vertice> momentanio = grafo.dijkstra(elemento1.darIdVertice(),elemento2.darIdVertice(), 0);
+			unirGrafos(ultimo,momentanio);
+		}
+		ultimo.cc();
+		escritor.mapaRequerimiento2C(ultimo);
+		return ultimo;
+	}
+
+	public Graph<Integer, Bogota_Vertice> unirGrafos(Graph<Integer, Bogota_Vertice> origen, Graph<Integer, Bogota_Vertice> nuevos)
+	{
+		Queue<Integer> llaves = nuevos.vectores();
+		while(llaves.isEmpty() == false)
+		{
+			Integer llave = llaves.dequeue();
+			if(origen.getInfoVertex(llave) != null)
+			{
+				Vertice<Integer, Bogota_Vertice> elmento = nuevos.getVertex(llave);
+				Queue<Arco<Integer, Bogota_Vertice>> arcos = elmento.darAdyacentes().darArcos();
+				origen.addVertex(elmento.darLlave(), elmento.darInformacion());
+				while(arcos.isEmpty() == false)
+				{
+					Arco<Integer, Bogota_Vertice> arco = arcos.dequeue();
+					origen.addEdge(arco.darOrigen().darLlave(), arco.darDestino().darLlave(), arco.darCosto());
+				}
+			}
+		}
+		return origen;
 	}
 }
 
